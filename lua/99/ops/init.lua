@@ -3,4 +3,3 @@ return {
     implement_fn = require("99.ops.implement-fn"),
     Context = require("99.ops.context"),
 }
-
