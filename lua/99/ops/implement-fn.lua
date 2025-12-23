@@ -87,10 +87,10 @@ local function implement_fn(_99)
         on_stdout = function(line)
             code_placement:push(line)
         end,
-        on_complete = function(ok, response)
+        on_complete = function(status, response)
             code_placement:stop()
             at_call_site:stop()
-            if not ok then
+            if status ~= "success" then
                 location:clear_marks()
                 Logger:fatal(
                     "unable to implement function, enable and check logger for more details"

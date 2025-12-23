@@ -28,7 +28,7 @@ describe("implement_function", function()
         _99.implement_fn()
         eq(test_content.function_with_unknown_fn_call, r(buffer))
 
-        p:resolve(true, "function bar()\n  return 42\nend")
+        p:resolve("success", "function bar()\n  return 42\nend")
         test_utils.next_frame()
 
         local expected_state = {

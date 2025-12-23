@@ -61,14 +61,15 @@ function OpenCodeProvider:make_request(query, request, observer)
     end)
 
     local id = get_id()
-    Logger:debug("99#make_query", "id", id, "query", query)
+    Logger:debug("make_request", "tmp_file", request.config.context.tmp_file, "id", id)
     vim.system(
-        { "opencode", "run", "-m", "anthropic/claude-sonnet-4-5", query },
+        { "opencode", "run", "-m", request.config.model, query },
         {
             text = true,
             stdout = vim.schedule_wrap(function(err, data)
                 Logger:debug("STDOUT#data", "id", id, "data", data)
                 if request:is_cancelled() then
+                    once_complete("cancelled", "")
                     return
                 end
                 if err and err ~= "" then
@@ -81,6 +82,7 @@ function OpenCodeProvider:make_request(query, request, observer)
             stderr = vim.schedule_wrap(function(err, data)
                 Logger:debug("STDERR#data", "id", id, "data", data)
                 if request:is_cancelled() then
+                    once_complete("cancelled", "")
                     return
                 end
                 if err and err ~= "" then
@@ -93,6 +95,7 @@ function OpenCodeProvider:make_request(query, request, observer)
         },
         function(obj)
             if request:is_cancelled() then
+                once_complete("cancelled", "")
                 Logger:debug(
                     "on_complete: request has been cancelled",
                     "id",
@@ -106,7 +109,7 @@ function OpenCodeProvider:make_request(query, request, observer)
                     obj.code,
                     vim.inspect(obj)
                 )
-                observer.on_complete(false, str)
+                once_complete("failed", str)
                 Logger:fatal(
                     "opencode make_query failed",
                     "id",
@@ -117,7 +120,11 @@ function OpenCodeProvider:make_request(query, request, observer)
             end
             vim.schedule(function()
                 local ok, res = OpenCodeProvider._retrieve_response(request)
-                observer.on_complete(ok, res)
+                if ok then
+                    once_complete("success", res)
+                else
+                    once_complete("failed", "unable to retrieve response from llm")
+                end
             end)
         end
     )

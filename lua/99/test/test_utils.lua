@@ -1,4 +1,11 @@
+local Logger = require("99.logger.logger")
 local M = {}
+
+local _id = 1
+local function get_id()
+    _id = _id + 1
+    return _id
+end
 
 function M.next_frame()
     local next = false
@@ -31,20 +38,23 @@ end
 ---@param request _99.Request
 ---@param observer _99.ProviderObserver?
 function TestProvider:make_request(query, request, observer)
+    local id = get_id()
+    Logger:debug("make_request", "tmp_file", request.config.context.tmp_file, "id", id)
     self.request = {
         query = query,
         request = request,
         observer = observer,
+        id = id,
     }
 end
 
---- @param success boolean
+--- @param status _99.Request.ResponseState
 --- @param result string
-function TestProvider:resolve(success, result)
+function TestProvider:resolve(status, result)
     assert(self.request, "you cannot call resolve until make_request is called")
     local obs = self.request.observer
     if obs then
-        obs.on_complete(success, result)
+        obs.on_complete(status, result)
     end
     self.request = nil
 end

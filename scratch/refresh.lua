@@ -12,9 +12,7 @@ function test_body()
     local Lang = require("99.language")
     local cursor = Point:from_cursor()
     local func = ts.containing_function(0, cursor)
-    local body = Lang.find_body(func.function_node, "block")
 
-    print("body", vim.inspect(body))
 end
 
 test_body()

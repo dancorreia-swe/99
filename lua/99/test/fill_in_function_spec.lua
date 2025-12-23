@@ -34,7 +34,7 @@ describe("fill_in_function", function()
             _99.fill_in_function()
             eq(case[2], r(buffer))
 
-            p:resolve(true, "function foo()\n    return 42\nend")
+            p:resolve("success", "function foo()\n    return 42\nend")
             test_utils.next_frame()
 
             local expected_state = {
@@ -64,7 +64,19 @@ describe("fill_in_function", function()
 
         assert.is_true(p.request.request:is_cancelled())
 
-        p:resolve(true, "function foo()\n    return 42\nend")
+        p:resolve("success", "function foo()\n    return 42\nend")
+        test_utils.next_frame()
+
+        eq(test_content.empty_function_single_line, r(buffer))
+    end)
+
+    it("should handle error cases with graceful failures", function()
+        local p, buffer = setup(test_content.empty_function_single_line)
+        _99.fill_in_function()
+
+        eq(test_content.empty_function_single_line, r(buffer))
+
+        p:resolve("failed", "Something went wrong")
         test_utils.next_frame()
 
         eq(test_content.empty_function_single_line, r(buffer))

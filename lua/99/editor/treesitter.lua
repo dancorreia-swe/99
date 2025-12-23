@@ -93,6 +93,19 @@ end
 local Function = {}
 Function.__index = Function
 
+--- uses the function_node to replace the text within vim using nvim_buf_set_text
+--- to replace at the exact function begin / end
+--- @param replace_with string[]
+function Function:replace_text(replace_with)
+    local s_row, s_col = self.function_range.start:to_vim()
+    local e_row, e_col = self.function_range.end_:to_vim()
+    local buffer = self.function_range.buffer
+    local bufname = vim.api.nvim_buf_get_name(buffer)
+
+    Logger:debug("replacing text", "file", bufname, "buffer", buffer, "range", self.function_range:to_string())
+    vim.api.nvim_buf_set_text(buffer, s_row, s_col, e_row, e_col, replace_with)
+end
+
 --- @param ts_node _99.treesitter.TSNode
 ---@param lang string
 ---@param buffer number
@@ -160,21 +173,7 @@ function M.containing_function(buffer, cursor)
     for id, node, _ in query:iter_captures(root, buffer, 0, -1, { all = true }) do
         local range = Range:from_ts_node(node, buffer)
         local name = query.captures[id]
-        Logger:debug(
-            "containing_function#capture",
-            "range",
-            range:to_string(),
-            "name",
-            name
-        )
         if name == "context.function" and range:contains(cursor) then
-            Logger:debug(
-                "    containing_function#capture#found",
-                "cursor",
-                cursor:to_string(),
-                "range",
-                range:to_string()
-            )
             if not found_range then
                 found_range = range
                 found_node = node
@@ -183,12 +182,13 @@ function M.containing_function(buffer, cursor)
                 found_node = node
             end
         end
-        Logger:debug(
-            "containing_function#capture finished loop",
-            "found_range",
-            found_range and found_range:to_string() or "found_range is nil"
-        )
     end
+
+    Logger:debug(
+        "treesitter#containing_function",
+        "found_range",
+        found_range and found_range:to_string() or "found_range is nil"
+    )
 
     if not found_range then
         return nil

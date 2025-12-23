@@ -2,6 +2,7 @@ local Logger = require("99.logger.logger")
 local Level = require("99.logger.level")
 local ops = require("99.ops")
 local Languages = require("99.language")
+local Window = require("99.window")
 
 --- @alias _99.Cleanup fun(): nil
 
@@ -94,6 +95,19 @@ function _99.fill_in_function()
     ops.fill_in_function(_99_state)
 end
 
+--- View all the logs that are currently cached.  Cached log count is determined
+--- by _99.Logger.Options that are passed in.
+function _99.view_log()
+    local logs = {}
+    for _, log in ipairs(Logger.log_cache) do
+        local lines = vim.split(log, "\n")
+        for _, line in ipairs(lines) do
+            table.insert(logs, line)
+        end
+    end
+    Window.display_full_screen_message(logs)
+end
+
 function _99.__debug_ident()
     ops.debug_ident(_99_state)
 end
@@ -105,9 +119,7 @@ function _99.stop_all_requests()
     _99_state.__active_requests = {}
 end
 
---- as a warning do not use this function unless you intend to use it for
---- debugging purposes.  any modifications to this object will likely result in this library
---- not working properly
+--- if you touch this function you will be fired
 --- @return _99.State
 function _99.__get_state()
     return _99_state

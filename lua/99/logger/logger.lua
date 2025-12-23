@@ -1,9 +1,16 @@
 local levels = require("99.logger.level")
 
---- @class LoggerConfig
+--- @class _99.Logger.Options
+--- @field level number?
+--- @field path string?
+--- @field print_on_error? boolean
+--- @field max_logs_cached? number
+
+--- @class _99.Logger.LoggerConfig
 --- @field type? "file" | "print"
 --- @field path? string
 --- @field level? number
+--- @field max_logs_cached? number
 
 --- @param ... any[]
 --- @return string
@@ -85,6 +92,7 @@ end
 --- @field level number
 --- @field sink LoggerSink
 --- @field print_on_error boolean
+--- @field log_cache string[]
 local Logger = {}
 Logger.__index = Logger
 
@@ -95,6 +103,7 @@ function Logger:new(level)
         sink = PrintSink:new(),
         level = level,
         print_on_error = false,
+        log_cache = {},
     }, self)
 end
 
@@ -124,11 +133,6 @@ function Logger:on_error_print_message()
     return self
 end
 
---- @class _99.Logger.Options
---- @field level number?
---- @field path string?
---- @field print_on_error? boolean
-
 --- @param opts _99.Logger.Options?
 function Logger:configure(opts)
     if not opts then
@@ -149,6 +153,22 @@ function Logger:configure(opts)
     if opts.print_on_error then
         self:on_error_print_message()
     end
+
+    self.max_logs_cached = opts.max_logs_cached or 100
+end
+
+--- @param line string
+function Logger:_cache_log(line)
+    if not self.log_cache then
+        self.log_cache = {}
+    end
+
+    table.insert(self.log_cache, line)
+
+    local max = self.max_logs_cached or 100
+    if #self.log_cache > max then
+        table.remove(self.log_cache, 1)
+    end
 end
 
 function Logger:_log(level, msg, ...)
@@ -162,6 +182,7 @@ function Logger:_log(level, msg, ...)
     if self.print_on_error and level == levels.ERROR then
         print(line)
     end
+    self:_cache_log(line)
     self.sink:write_line(line)
 end
 

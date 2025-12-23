@@ -55,8 +55,6 @@ function Mark.mark_end_of_range(buffer, range)
     -- that i have a but somewhere in the range and tsnode integration.
     local id = vim.api.nvim_buf_set_extmark(buffer, nsid, line - 1, col + 1, {})
 
-    implement_fizz_buzz()
-
     return setmetatable({
         id = id,
         buffer = buffer,

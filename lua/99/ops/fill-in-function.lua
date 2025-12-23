@@ -29,23 +29,13 @@ local function update_file_with_changes(res, location)
             "update_file_with_changes: unable to find function at mark location"
         )
         error(
-            "update_file_with_changes: funable to find function at mark location"
+            "update_file_with_changes: unable to find function at mark location"
         )
         return
     end
 
-    local range = func.function_range
-    local function_start_row, _ = range.start:to_vim()
-    local function_end_row, _ = range.end_:to_vim()
-
     local lines = vim.split(res, "\n")
-    vim.api.nvim_buf_set_lines(
-        buffer,
-        function_start_row,
-        function_end_row + 1,
-        false,
-        lines
-    )
+    func:replace_text(lines)
 end
 
 --- @param _99 _99.State
@@ -95,13 +85,13 @@ local function fill_in_function(_99)
         on_stdout = function(line)
             request_status:push(line)
         end,
-        on_complete = function(ok, response)
+        on_complete = function(status, response)
             request_status:stop()
             if request:is_cancelled() then
                 return
             end
 
-            if not ok then
+            if status == "failed" then
                 if _99.display_errors then
                     Window.display_error(
                         "Error encountered while processing fill_in_function\n"
@@ -113,7 +103,11 @@ local function fill_in_function(_99)
                 Logger:error(
                     "unable to fill in function, enable and check logger for more details"
                 )
+            elseif status == "cancelled" then
+                -- TODO: small status window here
+                return
             end
+
             update_file_with_changes(response, location)
         end,
         on_stderr = function(line) end,
