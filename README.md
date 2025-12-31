@@ -2,6 +2,11 @@
 This is an example repo where i want to test what i think the ideal AI workflow
 is for people who dont have "skill issues."  This is meant to streamline the requests to AI and limit them it restricted areas.  For more general requests, please just use opencode.  Dont use neovim.
 
+## Warning
+1. Prompts are temporary right now. they could be massively improved
+2. TS and Lua language support, open to more
+3. Still very alpha, could have severe problems
+
 ## How to use
 **you must have opencode installed and setup**
 
