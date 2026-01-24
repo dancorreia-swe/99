@@ -25,7 +25,7 @@ if there are DIRECTIONS, follow those when changing this function.  Do not devia
   output_file = function()
     return [[
 NEVER alter any file other than TEMP_FILE.
-never provide the requested changes as conversational output.
+never provide the requested changes as conversational output. Return only the code.
 ONLY provide requested changes by writing the change to TEMP_FILE
 ]]
   end,
