@@ -69,8 +69,9 @@ I make the assumption you are using Lazy
                       "scratch/custom_rules/",
                     },
 
-                    --- What autocomplete do you use.  We currently only
-                    --- support cmp right now
+                    --- What autocomplete do you use.  We support:
+                    --- "cmp" - nvim-cmp
+                    --- "blink" - blink.cmp
                     source = "cmp",
                 },
 
@@ -108,9 +109,30 @@ I make the assumption you are using Lazy
 ```
 
 ## Completion
-When prompting, if you have cmp installed as your autocomplete you can use an autocomplete for rule inclusion in your prompt.
+When prompting, you can use autocomplete for rule/skill inclusion in your prompt.
+Both **nvim-cmp** and **blink.cmp** are supported.
 
 How skill completion and inclusion works is that you start by typing `@`.
+
+### nvim-cmp
+Set `source = "cmp"` in your completion config (shown in example above).
+
+### blink.cmp
+Set `source = "blink"` in your completion config, then add the 99 source to your blink.cmp setup:
+
+```lua
+require("blink.cmp").setup({
+  sources = {
+    default = { "lsp", "path", "snippets", "buffer", "99" },
+    providers = {
+      ["99"] = {
+        module = "99.extensions.completion.blink",
+        name = "99",
+      },
+    },
+  },
+})
+```
 
 ## API
 You can see the full api at [99 API](./lua/99/init.lua)
