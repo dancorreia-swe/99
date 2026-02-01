@@ -183,21 +183,32 @@ describe("completion: blink adapter", function()
   end)
 
   it("calls callback with items", function()
+    package.loaded["blink.cmp.types"] = {
+      CompletionItemKind = {
+        File = 17,
+      },
+    }
+
     local blink = require("99.extensions.completion.blink")
     mock_state()
 
     local source = blink.new()
     local result = nil
 
-    source:get_completions({}, function(r)
+    source:get_completions({
+      line = "@custom_rule_1",
+      cursor = { 1, 16 },
+    }, function(r)
       result = r
     end)
+
+    package.loaded["blink.cmp.types"] = nil
 
     assert(result, "callback should be called")
     assert(result.items, "result should have items")
     assert(type(result.items) == "table", "items should be table")
     eq(false, result.is_incomplete_forward)
-    eq(false, result.is_incomplete_backward)
+    eq(true, result.is_incomplete_backward)
   end)
 end)
 
