@@ -1,4 +1,5 @@
 --- @class _99.Extensions.Source
+--- @field dependency string? external module that must be loadable
 --- @field init_for_buffer fun(_99: _99.State): nil
 --- @field init fun(_99: _99.State): nil
 --- @field refresh_state fun(_99: _99.State): nil
@@ -22,6 +23,20 @@ local function get_source(name)
   if not ok then
     vim.notify(
       string.format("99: completion.source '%s' is not available", name),
+      vim.log.levels.ERROR
+    )
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    loaded_sources[name] = false
+    return nil
+  end
+
+  if source.dependency and not pcall(require, source.dependency) then
+    vim.notify(
+      string.format(
+        "99: completion.source '%s' requires '%s' which is not installed",
+        name,
+        source.dependency
+      ),
       vim.log.levels.ERROR
     )
     ---@diagnostic disable-next-line: assign-type-mismatch

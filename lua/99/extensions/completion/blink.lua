@@ -83,6 +83,7 @@ end
 
 --- @type _99.Extensions.Source
 local source_wrapper = {
+  dependency = "blink.cmp",
   init = init,
   init_for_buffer = init_for_buffer,
   refresh_state = refresh_state,

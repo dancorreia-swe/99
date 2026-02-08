@@ -83,6 +83,7 @@ end
 
 --- @type _99.Extensions.Source
 local source_wrapper = {
+  dependency = "cmp",
   init_for_buffer = init_for_buffer,
   init = init,
   refresh_state = refresh_state,
