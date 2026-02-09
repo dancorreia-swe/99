@@ -79,24 +79,6 @@ function M.is_rule(rules, token)
 end
 
 --- @param rules _99.Agents.Rules
---- @param haystack string
---- @return _99.Agents.Rule[]
-function M.find_rules(rules, haystack)
-  --- @type _99.Agents.Rule[]
-  local out = {}
-
-  for word in haystack:gmatch("#%S+") do
-    local rule_string = word:sub(2)
-    local rule = M.get_rule_by_path(rules, rule_string)
-    if rule then
-      table.insert(out, rule)
-    end
-  end
-
-  return out
-end
-
---- @param rules _99.Agents.Rules
 --- @param prompt string
 --- @return {names: string[], rules: _99.Agents.Rules[]}
 function M.by_name(rules, prompt)
