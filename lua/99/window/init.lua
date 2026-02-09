@@ -7,6 +7,7 @@ local M = {
 }
 local nsid = vim.api.nvim_create_namespace("99.window.error")
 local nvim_win_is_valid = vim.api.nvim_win_is_valid
+local nvim_buf_is_valid = vim.api.nvim_buf_is_valid
 
 --- @class _99.window.Config
 --- @field width number
@@ -51,7 +52,7 @@ local function create_window_top_config()
 end
 
 --- @return _99.window.Config
-local function create_window_top_left_config()
+local function create_window_top_right_config()
   local width, _ = get_ui_dimensions()
   return {
     width = math.floor(width / 3),
@@ -179,14 +180,20 @@ local function window_close(window)
   if nvim_win_is_valid(window.win_id) then
     vim.api.nvim_win_close(window.win_id, true)
   end
-  if vim.api.nvim_buf_is_valid(window.buf_id) then
+  if nvim_buf_is_valid(window.buf_id) then
     vim.api.nvim_buf_delete(window.buf_id, { force = true })
   end
 end
 
+--- @param window _99.window.Window
+--- @return boolean
+function M.valid(window)
+  return nvim_win_is_valid(window.win_id) and nvim_buf_is_valid(window.buf_id)
+end
+
 --- @param text string
 function M.display_cancellation_message(text)
-  local config = create_window_top_left_config()
+  local config = create_window_top_right_config()
   local window = create_floating_window(config, {
     title = " 99 Cancelled ",
     border = "rounded",
@@ -421,8 +428,21 @@ function M.clear_active_popups()
   M.active_windows = {}
 end
 
+--- @return _99.window.Window
 function M.status_window()
   M.clear_active_popups()
+  local config = create_window_top_right_config()
+  local window = create_floating_window(config, {
+    title = " 99 - Status ",
+    border = "rounded",
+    zindex = 100,
+  })
+  return window
+end
+
+--- @return boolean
+function M.has_active_windows()
+  return #M.active_windows > 0
 end
 
 return M

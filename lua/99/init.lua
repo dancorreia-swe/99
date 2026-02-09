@@ -12,6 +12,7 @@ local Extensions = require("99.extensions")
 local Agents = require("99.extensions.agents")
 local Providers = require("99.providers")
 local time = require("99.time")
+local Throbber = require("99.ops.throbber")
 
 ---@param path_or_rule string | _99.Agents.Rule
 ---@return _99.Agents.Rule | string
@@ -60,6 +61,7 @@ end
 --- @field md_files string[]
 --- @field prompts _99.Prompts
 --- @field ai_stdout_rows number
+--- @field show_in_flight_requests boolean
 --- @field languages string[]
 --- @field display_errors boolean
 --- @field auto_add_skills boolean
@@ -76,6 +78,7 @@ local function create_99_state()
     md_files = {},
     prompts = require("99.prompt-settings"),
     ai_stdout_rows = 3,
+    show_in_flight_requests = false,
     languages = { "lua", "go", "java", "elixir", "cpp", "ruby" },
     display_errors = false,
     provider_override = nil,
@@ -94,6 +97,7 @@ end
 --- @class _99.Options
 --- @field logger _99.Logger.Options?
 --- @field model string?
+--- @field show_in_flight_requests boolean?
 --- @field md_files string[]?
 --- @field provider _99.Providers.BaseProvider?
 --- @field debug_log_prefix string?
@@ -111,6 +115,9 @@ end
 --- @field ai_stdout_rows number
 --- @field languages string[]
 --- @field display_errors boolean
+--- @field show_in_flight_requests boolean
+--- @field show_in_flight_requests_window _99.window.Window | nil
+--- @field show_in_flight_requests_throbber _99.Throbber | nil
 --- @field provider_override _99.Providers.BaseProvider?
 --- @field auto_add_skills boolean
 --- @field rules _99.Agents.Rules
@@ -433,11 +440,48 @@ function _99.__get_state()
   return _99_state
 end
 
+local function shut_down_in_flight_requests_window()
+  if _99_state.show_in_flight_requests_throbber then
+    _99_state.show_in_flight_requests_throbber:stop()
+  end
+
+  _99_state.show_in_flight_requests_window = nil
+  _99_state.show_in_flight_requests_throbber = nil
+end
+
+local function show_in_flight_requests()
+  if _99_state.show_in_flight_requests == false then
+    return
+  end
+
+  if Window.has_active_windows() then
+    return
+  end
+
+  if _99_state.show_in_flight_requests_window == nil then
+    local win = Window.status_window()
+    _99_state.show_in_flight_requests_window = win
+    _99_state.show_in_flight_requests_throbber = Throbber.new(function(throb)
+      local count = _99_state:active_request_count()
+      if count == 0 or not Window.valid(win) then
+        return shut_down_in_flight_requests_window()
+      end
+
+      vim.api.nvim_buf_set_lines(win.buf_id, 0, 1, {
+        throb .. " " .. tostring(count),
+      })
+    end)
+  end
+
+  vim.defer_fn(show_in_flight_requests, 1000)
+end
+
 --- @param opts _99.Options?
 function _99.setup(opts)
   opts = opts or {}
 
   _99_state = _99_State.new()
+  _99_state.show_in_flight_requests = opts.show_in_flight_requests or false
   _99_state.provider_override = opts.provider
   _99_state.completion = opts.completion
     or {
@@ -483,6 +527,10 @@ function _99.setup(opts)
   _99_state:refresh_rules()
   Languages.initialize(_99_state)
   Extensions.init(_99_state)
+
+  if _99_state.show_in_flight_requests then
+    show_in_flight_requests()
+  end
 end
 
 --- @param md string
