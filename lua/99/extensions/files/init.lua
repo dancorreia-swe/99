@@ -25,6 +25,7 @@ local config = {
     ".env.*",
     "node_modules",
     ".git",
+    ".jj",
     "dist",
     "build",
     "*.log",
